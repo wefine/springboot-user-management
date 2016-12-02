@@ -1,4 +1,13 @@
-CREATE DATABASE `ums`
+/*!40101 SET NAMES utf8 */;
+
+/*!40101 SET SQL_MODE = '' */;
+
+DROP DATABASE `ums`;
+/*!40014 SET @OLD_UNIQUE_CHECKS = @@UNIQUE_CHECKS, UNIQUE_CHECKS = 0 */;
+/*!40014 SET @OLD_FOREIGN_KEY_CHECKS = @@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS = 0 */;
+/*!40101 SET @OLD_SQL_MODE = @@SQL_MODE, SQL_MODE = 'NO_AUTO_VALUE_ON_ZERO' */;
+/*!40111 SET @OLD_SQL_NOTES = @@SQL_NOTES, SQL_NOTES = 0 */;
+CREATE DATABASE IF NOT EXISTS `ums`
   DEFAULT CHARACTER SET utf8;
 
 USE `ums`;
@@ -8,7 +17,7 @@ USE `ums`;
 DROP TABLE IF EXISTS `sys_authorities`;
 
 CREATE TABLE `sys_authorities` (
-  `id`             CHAR(32)    NOT NULL,
+  `id`             CHAR(32)    NOT NULL PRIMARY KEY,
   `authority_name` VARCHAR(45) NOT NULL
   COMMENT '权限名称',
   `authority_desc` VARCHAR(45) DEFAULT NULL
@@ -21,9 +30,7 @@ CREATE TABLE `sys_authorities` (
   COMMENT '创建时间',
   `create_user_id` CHAR(36)    DEFAULT NULL
   COMMENT '创建用户ID',
-  `is_sys`         TINYINT(1)  NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`)
+  `is_sys`         TINYINT(1)  NOT NULL
 )
   ENGINE = InnoDB
   DEFAULT CHARSET = utf8
@@ -78,12 +85,12 @@ DROP TABLE IF EXISTS `sys_authorities_resources`;
 CREATE TABLE `sys_authorities_resources` (
   `authority_id` CHAR(32) NOT NULL,
   `resource_id`  CHAR(32) NOT NULL,
-  KEY `fk_sys_authorities_resources_sys_authorities1_idx` (`authority_id`),
-  KEY `fk_sys_authorities_resources_sys_authorities_resources1_idx` (`resource_id`),
-  CONSTRAINT `fk_sys_authorities_resources_sys_authorities1` FOREIGN KEY (`authority_id`) REFERENCES `sys_authorities` (`id`)
+  KEY `idx_sys_authorities_resources_authority_id` (`authority_id`),
+  KEY `idx_sys_authorities_resources_resource_id` (`resource_id`),
+  CONSTRAINT `fk_sys_authorities_resources_sys_authorities` FOREIGN KEY (`authority_id`) REFERENCES `sys_authorities` (`id`)
     ON DELETE CASCADE
     ON UPDATE NO ACTION,
-  CONSTRAINT `fk_sys_authorities_resources_sys_authorities_resources1` FOREIGN KEY (`resource_id`) REFERENCES `sys_resources` (`id`)
+  CONSTRAINT `fk_sys_authorities_resources_sys_authorities_resources` FOREIGN KEY (`resource_id`) REFERENCES `sys_resources` (`id`)
     ON DELETE CASCADE
     ON UPDATE NO ACTION
 )
@@ -149,11 +156,11 @@ CREATE TABLE `sys_menus` (
   `url`        VARCHAR(200) DEFAULT NULL
   COMMENT '请求路径',
   PRIMARY KEY (`id`),
-  KEY `fk_sys_menus_menus` (`parent_id`),
-  KEY `fk_sys_menu_resouces` (`source_id`),
-  CONSTRAINT `fk_sys_menus_menus` FOREIGN KEY (`parent_id`) REFERENCES `sys_menus` (`id`)
+  KEY `idx_sys_menus_parent_id` (`parent_id`),
+  KEY `idx_sys_menu_source_id` (`source_id`),
+  CONSTRAINT `fk_sys_menus_sys_menus` FOREIGN KEY (`parent_id`) REFERENCES `sys_menus` (`id`)
     ON DELETE CASCADE,
-  CONSTRAINT `fk_sys_menu_resouces` FOREIGN KEY (`source_id`) REFERENCES `sys_resources` (`id`)
+  CONSTRAINT `fk_sys_menu_sys_resources` FOREIGN KEY (`source_id`) REFERENCES `sys_resources` (`id`)
     ON DELETE CASCADE
 )
   ENGINE = InnoDB
@@ -200,10 +207,8 @@ CREATE TABLE `sys_resources` (
   `parent_id`     CHAR(32)    DEFAULT NULL,
   `creator_id`    VARCHAR(32) DEFAULT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
-  KEY `fk_sys_resources_1_idx` (`parent_id`),
-  KEY `fk_sys_resouces_resouces` (`parent_id`),
-  CONSTRAINT `fk_sys_resouces_resouces` FOREIGN KEY (`parent_id`) REFERENCES `sys_resources` (`id`)
+  KEY `idx_sys_resources_parent_id` (`parent_id`),
+  CONSTRAINT `fk_sys_resources_sys_resources` FOREIGN KEY (`parent_id`) REFERENCES `sys_resources` (`id`)
     ON DELETE SET NULL
     ON UPDATE NO ACTION
 )
@@ -260,12 +265,12 @@ CREATE TABLE `sys_role_menus` (
   `enable`  TINYINT(1) DEFAULT NULL,
   `role_id` CHAR(32)   DEFAULT NULL,
   PRIMARY KEY (`id`),
-  KEY `fk_role_menus_menus` (`menu_id`),
-  KEY `fk_role_menus_role` (`role_id`),
-  CONSTRAINT `fk_role_menus_menus` FOREIGN KEY (`menu_id`) REFERENCES `sys_menus` (`id`)
+  KEY `idx_sys_role_menus_menu_id` (`menu_id`),
+  KEY `idx_sys_role_menus_role_id` (`role_id`),
+  CONSTRAINT `fk_sys_role_menus_sys_menus` FOREIGN KEY (`menu_id`) REFERENCES `sys_menus` (`id`)
     ON DELETE CASCADE
     ON UPDATE NO ACTION,
-  CONSTRAINT `fk_role_menus_role` FOREIGN KEY (`role_id`) REFERENCES `sys_roles` (`id`)
+  CONSTRAINT `fk_sys_role_menus_sys_roles` FOREIGN KEY (`role_id`) REFERENCES `sys_roles` (`id`)
     ON DELETE CASCADE
     ON UPDATE NO ACTION
 )
@@ -323,14 +328,12 @@ CREATE TABLE `sys_roles` (
   `create_user_id` CHAR(32)    DEFAULT NULL
   COMMENT '创建人',
   `is_sys`         TINYINT(1)  NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`)
+  PRIMARY KEY (`id`)
 )
   ENGINE = InnoDB
   DEFAULT CHARSET = utf8
   COMMENT = '系统角色';
 
-/*Data for the table `sys_roles` */
 
 INSERT INTO `sys_roles` (`id`, `role_name`, `role_desc`, `data_level`, `is_enabled`, `create_date`, `create_user_id`, `is_sys`)
 VALUES ('297ee8ae3b84c24b013b84c71fd60000', '用户管理员', '用户管理员', 0, 1, '2013-02-09 17:03:29',
@@ -340,28 +343,26 @@ VALUES ('297ee8ae3b84c24b013b84c71fd60000', '用户管理员', '用户管理员'
   ('297eeea940b831c10140b833152f0001', '超级用户', '', 1, 1, '2013-08-26 09:18:10', '4028d1813c705372013c705aac010005', 0),
   ('4028d1813c8c02ab013c8c030b6a0001', '系统管理', '', 0, 1, '2013-01-30 23:11:15', '11111111111111111111111111111111', 0);
 
-/*Table structure for table `sys_roles_anthorities` */
 
-DROP TABLE IF EXISTS `sys_roles_anthorities`;
+DROP TABLE IF EXISTS sys_roles_authorities;
 
-CREATE TABLE `sys_roles_anthorities` (
+CREATE TABLE sys_roles_authorities (
   `role_id`      CHAR(32) NOT NULL,
   `authority_id` CHAR(32) NOT NULL,
-  KEY `fk_sys_roles_anthorities_1_idx` (`role_id`),
-  KEY `fk_sys_roles_anthorities_1_idx1` (`authority_id`),
-  CONSTRAINT `fk_sys_roles_anthorities_authority_id` FOREIGN KEY (`authority_id`) REFERENCES `sys_authorities` (`id`)
+  KEY `idx_sys_roles_authorities_role_id` (`role_id`),
+  KEY `idx_sys_roles_authorities_authority_id` (`authority_id`),
+  CONSTRAINT `fk_sys_roles_authorities_sys_authorities` FOREIGN KEY (`authority_id`) REFERENCES `sys_authorities` (`id`)
     ON DELETE CASCADE
     ON UPDATE NO ACTION,
-  CONSTRAINT `fk_sys_roles_anthorities_role_id` FOREIGN KEY (`role_id`) REFERENCES `sys_roles` (`id`)
+  CONSTRAINT `fk_sys_roles_authorities_sys_roles` FOREIGN KEY (`role_id`) REFERENCES `sys_roles` (`id`)
     ON DELETE CASCADE
     ON UPDATE NO ACTION
 )
   ENGINE = InnoDB
   DEFAULT CHARSET = utf8;
 
-/*Data for the table `sys_roles_anthorities` */
 
-INSERT INTO `sys_roles_anthorities` (`role_id`, `authority_id`)
+INSERT INTO sys_roles_authorities (`role_id`, `authority_id`)
 VALUES ('4028d1813c8c02ab013c8c030b6a0001', '297ee8ae3b9bb8e5013b9bbc9efc0002'),
   ('4028d1813c8c02ab013c8c030b6a0001', '297ee8ae3b9bb8e5013b9bc297b40003'),
   ('4028d1813c8c02ab013c8c030b6a0001', '297ee8ae3b9bb8e5013b9bc321a40004'),
@@ -438,7 +439,6 @@ CREATE TABLE `sys_users` (
   `job`                        CHAR(32)   DEFAULT NULL,
   `owner`                      CHAR(32)   DEFAULT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `user_account` (`user_account`)
 )
   ENGINE = InnoDB
@@ -459,12 +459,12 @@ DROP TABLE IF EXISTS `sys_users_roles`;
 CREATE TABLE `sys_users_roles` (
   `user_id` CHAR(32) NOT NULL,
   `role_id` CHAR(32) NOT NULL,
-  KEY `fk_sys_users_roles_1_idx` (`user_id`),
-  KEY `fk_sys_users_roles_1_idx1` (`role_id`),
-  CONSTRAINT `fk_sys_users_roles_role_id` FOREIGN KEY (`role_id`) REFERENCES `sys_roles` (`id`)
+  KEY `idx_sys_users_roles_user_id` (`user_id`),
+  KEY `idx_sys_users_roles_role_id` (`role_id`),
+  CONSTRAINT `fk_sys_users_roles_sys_roles` FOREIGN KEY (`role_id`) REFERENCES `sys_roles` (`id`)
     ON DELETE CASCADE
     ON UPDATE NO ACTION,
-  CONSTRAINT `fk_sys_users_roles_user_id` FOREIGN KEY (`user_id`) REFERENCES `sys_users` (`id`)
+  CONSTRAINT `fk_sys_users_roles_sys_users` FOREIGN KEY (`user_id`) REFERENCES `sys_users` (`id`)
     ON DELETE CASCADE
     ON UPDATE NO ACTION
 )
@@ -502,3 +502,10 @@ CREATE TABLE `user_login_log` (
 )
   ENGINE = InnoDB
   DEFAULT CHARSET = utf8;
+
+/*Data for the table `user_login_log` */
+
+/*!40101 SET SQL_MODE = @OLD_SQL_MODE */;
+/*!40014 SET FOREIGN_KEY_CHECKS = @OLD_FOREIGN_KEY_CHECKS */;
+/*!40014 SET UNIQUE_CHECKS = @OLD_UNIQUE_CHECKS */;
+/*!40111 SET SQL_NOTES = @OLD_SQL_NOTES */;
